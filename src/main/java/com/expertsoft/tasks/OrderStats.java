@@ -4,9 +4,8 @@ import com.expertsoft.model.*;
 import com.expertsoft.util.AveragingBigDecimalCollector;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import static java.util.stream.Collectors.*;
 import java.util.stream.Stream;
 
 /**
@@ -28,7 +27,11 @@ class OrderStats {
      * @return list, containing orders paid with provided card type
      */
     static List<Order> ordersForCardType(final Stream<Customer> customers, PaymentInfo.CardType cardType) {
-        return null;
+        return customers
+                .map(Customer::getOrders)
+                .flatMap(Collection::stream)
+                .filter(o -> o.getPaymentInfo().getCardType() == cardType)
+                .collect(toList());
     }
 
     /**
@@ -41,7 +44,11 @@ class OrderStats {
      * @return map, where order size values mapped to lists of orders
      */
     static Map<Integer, List<Order>> orderSizes(final Stream<Order> orders) {
-        return null;
+        return orders
+                .collect(groupingBy(o -> o.getOrderItems()
+                        .stream()
+                        .map(OrderItem::getQuantity)
+                        .reduce(0, Integer::sum)));
     }
 
     /**
@@ -55,7 +62,11 @@ class OrderStats {
      * @return boolean, representing if every order in the stream contains product of specified color
      */
     static Boolean hasColorProduct(final Stream<Order> orders, final Product.Color color) {
-        return null;
+        return orders
+                .allMatch(o -> o.getOrderItems()
+                        .stream()
+                        .anyMatch(y -> y.getProduct().getColor() == color)
+                );
     }
 
     /**
@@ -67,7 +78,20 @@ class OrderStats {
      * @return map, where for each customer email there is a long referencing a number of different credit cards this customer uses.
      */
     static Map<String, Long> cardsCountForCustomer(final Stream<Customer> customers) {
-        return null;
+        Map<String, Long> news = new HashMap<>();
+        customers.collect(
+                groupingBy(Customer::getEmail,
+                        mapping(c -> c.getOrders()
+                                .stream()
+                                .map(Order::getPaymentInfo)
+                                .distinct()
+                                .count(), toList()
+                        )
+                )
+//        ).forEach((key, value) -> news.put(key, (long) value.size()));
+        ).forEach((key, value) -> news.put(key, value.get(0)));
+
+        return news;
     }
 
     /**
@@ -91,7 +115,31 @@ class OrderStats {
      * @return java.util.Optional containing the name of the most popular country
      */
     static Optional<String> mostPopularCountry(final Stream<Customer> customers) {
-        return null;
+        Map<String, Integer> news = new HashMap<>();
+        Map<String, List<Customer>> some = customers.collect(
+                groupingBy(c -> c.getAddress()
+                                .getCountry()
+//                        reducing(0, c -> c.)
+//                        mapping(c -> c.getAddress()
+//                                .map(Order::getPaymentInfo)
+//                                .distinct()
+//                                .count(), toList()
+//                        )
+                )
+        );
+        some.forEach((key, value) -> {
+            news.put(key, value.size());
+        });
+
+        Optional<Map.Entry<String, Integer>> s = news.entrySet()
+                .stream()
+                .max((e1, e2) -> {
+                    if (e1.getValue().intValue() == e2.getValue().intValue())
+                        return e1.getKey().length() - e2.getKey().length();
+                    else
+                        return e1.getValue() - e2.getValue();
+                });
+        return s.map(Map.Entry::getKey);
     }
 
     /**
@@ -114,7 +162,21 @@ class OrderStats {
      * @return average price of the product, ordered with the provided card
      */
     static BigDecimal averageProductPriceForCreditCard(final Stream<Customer> customers, final String cardNumber) {
+        List<BigDecimal> some = new LinkedList<>();
+
+        customers.map(Customer::getOrders)
+                .flatMap(Collection::stream)
+                .filter(o -> o.getPaymentInfo().getCardNumber().equals(cardNumber))
+                .map(Order::getOrderItems)
+                .flatMap(Collection::stream)
+                .forEach(o -> {
+                    for (int i = 0; i < o.getQuantity(); i++) {
+                        some.add(o.getProduct().getPrice());
+                    }
+                });
+
         final AveragingBigDecimalCollector collector = new AveragingBigDecimalCollector();
-        return null;
+
+        return some.stream().collect(collector);
     }
 }

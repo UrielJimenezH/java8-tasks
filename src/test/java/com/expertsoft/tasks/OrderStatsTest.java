@@ -10,9 +10,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
@@ -159,5 +157,39 @@ public class OrderStatsTest {
         final BigDecimal nonExistingCard = OrderStats.averageProductPriceForCreditCard(customerStream, "INVALID");
         assertEquals("Average product price for non-existing card should be 0",
                 BigDecimal.ZERO, nonExistingCard);
+    }
+
+    @Test
+    public void extraTaskTest1() {
+        int[] input = {3,44,108, 8, 51};
+        List<String> l1 = List.of("o3","e8");
+        List<String> l2 = List.of("e44","o51");
+        List<String> l3 = List.of("e108");
+
+        Map<Integer, List<String>> expectedResult = new HashMap<>();
+        expectedResult.put(1, l1);
+        expectedResult.put(2, l2);
+        expectedResult.put(3, l3);
+
+        Map<Integer, List<String>> result = OrderStats.groupByDigitNumbers(input);
+        assertEquals(expectedResult, result);
+    }
+
+    @Test
+    public void extraTaskTest2() {
+        int[] input = {-1, -2, -23, 43, 2, 345, 23, 235, 2234};
+        List<String> l1 = List.of("e2");
+        List<String> l2 = List.of("o43","o23");
+        List<String> l3 = List.of("o345", "o235");
+        List<String> l4 = List.of("e2234");
+
+        Map<Integer, List<String>> expectedResult = new HashMap<>();
+        expectedResult.put(1, l1);
+        expectedResult.put(2, l2);
+        expectedResult.put(3, l3);
+        expectedResult.put(4, l4);
+
+        Map<Integer, List<String>> result = OrderStats.groupByDigitNumbers(input);
+        assertEquals(expectedResult, result);
     }
 }

@@ -179,4 +179,18 @@ class OrderStats {
 
         return some.stream().collect(collector);
     }
+
+    public static Map<Integer, List<String>> groupByDigitNumbers(int[] input) {
+        return Arrays.stream(input)
+                .filter(e -> e >= 0)
+                .mapToObj(s -> {
+                    if (s % 2 == 0)
+                        return "e" + s;
+                    else
+                        return "o" + s;
+                })
+                .collect(
+                        groupingBy(e -> e.length() - 1)
+                );
+    }
 }
